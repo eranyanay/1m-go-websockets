@@ -1,5 +1,3 @@
 #!/bin/bash
-## This script removes *all* containers, even those that wasn't spawned using connect script
-## Use with caution
 
-docker rm -vf $(docker ps -q)
+docker rm -vf $(docker ps -q --filter label=1m-go-websockets)

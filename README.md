@@ -10,7 +10,7 @@ Each folder shows an example of a server implementation that overcomes various i
 
 `setup.sh` is a wrapper to running multiple instances using Docker. See content of the script for more details of how to use it.
 
-`destroy.sh` is a wrapper to stop all running clients. Note that it removes any running container, so use with caution.
+`destroy.sh` is a wrapper to stop all running clients.
 
 A single client instance can be executed by running `go run client.go -conn=<# connections to establish>`
 
