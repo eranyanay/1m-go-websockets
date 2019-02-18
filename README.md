@@ -1,7 +1,7 @@
 # Going Infinite, handling 1M websockets connections in Go
 This repository holds the complete implementation of the examples seen in Gophercon Israel talk, 2019.
 
-It doesnt intend or claim to serve as a better, more optimal implementation than other libraries that implements the websocket protocol, it simply shows a set of tools, all combined together to show a webserver written in pure Go that is able to server more than a million websockets connections with less than 1GB of ram.
+It doesnt intend or claim to serve as a better, more optimal implementation than other libraries that implements the websocket protocol, it simply shows a set of tools, all combined together to show a webserver written in pure Go that is able to serve more than a million websockets connections with less than 1GB of ram.
 
 # Usage
 This repository demonstrates how a very high number of websockets connections can be maintained efficiently in Linux
