@@ -1,6 +1,8 @@
 # Going Infinite, handling 1M websockets connections in Go
 This repository holds the complete implementation of the examples seen in Gophercon Israel talk, 2019.
 
+> Going Infinite, handling 1 millions websockets connections in Go / Eran Yanay &mdash; [ [Video](https://www.youtube.com/watch?v=LI1YTFMi8W4) | [Slides](https://speakerdeck.com/eranyanay/going-infinite-handling-1m-websockets-connections-in-go) ]
+
 It doesnt intend or claim to serve as a better, more optimal implementation than other libraries that implements the websocket protocol, it simply shows a set of tools, all combined together to demonstrate a server written in pure Go that is able to serve more than a million websockets connections with less than 1GB of ram.
 
 # Usage
@@ -15,5 +17,3 @@ Each folder shows an example of a server implementation that overcomes various i
 `destroy.sh` is a wrapper to stop all running clients.
 
 A single client instance can be executed by running `go run client.go -conn=<# connections to establish>`
-
-Slides are available [here](https://speakerdeck.com/eranyanay/going-infinite-handling-1m-websockets-connections-in-go)
