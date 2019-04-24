@@ -19,15 +19,16 @@ func ws(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	new := atomic.AddInt64(&count, 1)
-	if new%100 == 0 {
-		log.Printf("Total number of connections: %v", new)
+	n := atomic.AddInt64(&count, 1)
+	if n%100 == 0 {
+		log.Printf("Total number of connections: %v", n)
 	}
 	defer func() {
-		new := atomic.AddInt64(&count, -1)
-		if new%100 == 0 {
-			log.Printf("Total number of connections: %v", new)
+		n := atomic.AddInt64(&count, -1)
+		if n%100 == 0 {
+			log.Printf("Total number of connections: %v", n)
 		}
+		conn.Close()
 	}()
 
 	// Read messages from socket

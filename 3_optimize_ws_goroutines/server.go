@@ -72,6 +72,7 @@ func Start() {
 				if err := epoller.Remove(conn); err != nil {
 					log.Printf("Failed to remove %v", err)
 				}
+				conn.Close()
 			} else {
 				log.Printf("msg: %s", string(msg))
 			}

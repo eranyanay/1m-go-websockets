@@ -71,6 +71,7 @@ func Start() {
 				if err := epoller.Remove(conn); err != nil {
 					log.Printf("Failed to remove %v", err)
 				}
+				conn.Close()
 			} else {
 				// This is commented out since in demo usage, stdout is showing messages sent from > 1M connections at very high rate
 				//log.Printf("msg: %s", string(msg))
