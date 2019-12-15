@@ -1,4 +1,4 @@
-// +build linux
+// +build darwin
 
 package main
 
@@ -9,18 +9,28 @@ import (
 	"syscall"
 
 	"github.com/gorilla/websocket"
-	"golang.org/x/sys/unix"
 )
 
 type eventsCollector struct {
 	fd          int
 	connections map[int]*websocket.Conn
-	lock        *sync.RWMutex
+	// kqueue will watch these Kevent_t changes after call Kevent()
+	// see more in freeBSD paper: https://people.freebsd.org/~jlemon/papers/kqueue.pdf
+	changes []syscall.Kevent_t
+	lock    *sync.RWMutex
 }
 
 func MkEventsCollector() (*eventsCollector, error) {
-	fd, err := unix.EpollCreate1(0)
+	fd, err := syscall.Kqueue()
 	if err != nil {
+		return nil, err
+	}
+	kevent := syscall.Kevent_t{
+		Ident:  0,
+		Filter: syscall.EVFILT_USER,
+		Flags:  syscall.EV_ADD | syscall.EV_CLEAR,
+	}
+	if _, err = syscall.Kevent(fd, []syscall.Kevent_t{kevent}, nil, nil); err != nil {
 		return nil, err
 	}
 	return &eventsCollector{
@@ -32,10 +42,11 @@ func MkEventsCollector() (*eventsCollector, error) {
 
 func (e *eventsCollector) Add(conn *websocket.Conn) error {
 	fd := websocketFD(conn)
-	err := unix.EpollCtl(e.fd, syscall.EPOLL_CTL_ADD, fd, &unix.EpollEvent{Events: unix.POLLIN | unix.POLLHUP, Fd: int32(fd)})
-	if err != nil {
-		return err
-	}
+	e.changes = append(e.changes,
+		syscall.Kevent_t{
+			Ident: uint64(fd), Flags: syscall.EV_ADD, Filter: syscall.EVFILT_READ,
+		},
+	)
 	e.lock.Lock()
 	defer e.lock.Unlock()
 	e.connections[fd] = conn
@@ -47,13 +58,14 @@ func (e *eventsCollector) Add(conn *websocket.Conn) error {
 
 func (e *eventsCollector) Remove(conn *websocket.Conn) error {
 	fd := websocketFD(conn)
-	err := unix.EpollCtl(e.fd, syscall.EPOLL_CTL_DEL, fd, nil)
-	if err != nil {
-		return err
-	}
+	e.changes = append(e.changes,
+		syscall.Kevent_t{
+			Ident: uint64(fd), Flags: syscall.EV_DELETE, Filter: syscall.EVFILT_READ,
+		},
+	)
 	e.lock.Lock()
 	defer e.lock.Unlock()
-	delete(e.connections, fd)
+	e.connections[fd] = conn
 	if len(e.connections)%100 == 0 {
 		log.Printf("Total number of connections: %v", len(e.connections))
 	}
@@ -61,8 +73,8 @@ func (e *eventsCollector) Remove(conn *websocket.Conn) error {
 }
 
 func (e *eventsCollector) Wait() ([]*websocket.Conn, error) {
-	events := make([]unix.EpollEvent, 100)
-	n, err := unix.EpollWait(e.fd, events, 100)
+	events := make([]syscall.Kevent_t, 100)
+	n, err := syscall.Kevent(e.fd, e.changes, events, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -70,7 +82,7 @@ func (e *eventsCollector) Wait() ([]*websocket.Conn, error) {
 	defer e.lock.RUnlock()
 	var connections []*websocket.Conn
 	for i := 0; i < n; i++ {
-		conn := e.connections[int(events[i].Fd)]
+		conn := e.connections[int(events[i].Ident)]
 		connections = append(connections, conn)
 	}
 	return connections, nil

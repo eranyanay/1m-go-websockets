@@ -1,15 +1,16 @@
 package main
 
 import (
-	"github.com/gobwas/ws"
-	"github.com/gobwas/ws/wsutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
 	"syscall"
+
+	"github.com/gobwas/ws"
+	"github.com/gobwas/ws/wsutil"
 )
 
-var epoller *epoll
+var EventsCollector *eventsCollector
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	// Upgrade connection
@@ -17,7 +18,7 @@ func wsHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	if err := epoller.Add(conn); err != nil {
+	if err := EventsCollector.Add(conn); err != nil {
 		log.Printf("Failed to add connection %v", err)
 		conn.Close()
 	}
@@ -41,9 +42,9 @@ func main() {
 		}
 	}()
 
-	// Start epoll
+	// Start event
 	var err error
-	epoller, err = MkEpoll()
+	EventsCollector, err = MkEventsCollector()
 	if err != nil {
 		panic(err)
 	}
@@ -58,7 +59,7 @@ func main() {
 
 func Start() {
 	for {
-		connections, err := epoller.Wait()
+		connections, err := EventsCollector.Wait()
 		if err != nil {
 			log.Printf("Failed to epoll wait %v", err)
 			continue
@@ -68,7 +69,7 @@ func Start() {
 				break
 			}
 			if _, _, err := wsutil.ReadClientData(conn); err != nil {
-				if err := epoller.Remove(conn); err != nil {
+				if err := EventsCollector.Remove(conn); err != nil {
 					log.Printf("Failed to remove %v", err)
 				}
 				conn.Close()
