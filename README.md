@@ -17,3 +17,10 @@ Each folder shows an example of a server implementation that overcomes various i
 `destroy.sh` is a wrapper to stop all running clients.
 
 A single client instance can be executed by running `go run client.go -conn=<# connections to establish>`
+
+# Remarks
+This repo consists of a set of examples that were demonstrated during a live talk in Gophercon. 
+
+What you see is what you get - while the implementation is fully functional, it doesn't intend to serve as a production-ready code, and no new features that were asked will be added. 
+
+The only purpose of this repository is to serve as a reference and a case study.
