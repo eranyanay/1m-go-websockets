@@ -60,7 +60,9 @@ func Start() {
 	for {
 		connections, err := epoller.Wait()
 		if err != nil {
-			log.Printf("Failed to epoll wait %v", err)
+			if err != syscall.EINTR {
+				log.Printf("Failed to epoll wait %v", err)
+			}
 			continue
 		}
 		for _, conn := range connections {
